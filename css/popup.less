@@ -35,7 +35,7 @@ html {
 .container {
     position: relative;
     width: 320px;
-    min-height: 318px;
+    min-height: 323px;
     box-sizing: border-box;
 }
 
@@ -69,7 +69,7 @@ textarea {
             transition: 0.3s ease-out;
         }
 
-        .proxy-tip {
+        .option-tip {
             transition: none;
 
             > .fui-alert-circle {
@@ -79,7 +79,7 @@ textarea {
                 line-height: 1;
                 font-size: 12px;
 
-                &:hover + .proxy-tip-content {
+                &:hover + .option-tip-content {
                     display: block;
                     -webkit-transform-origin: 10px 0;
                     -webkit-animation: previewer .2s;
@@ -90,7 +90,7 @@ textarea {
                 }
             }
 
-            .proxy-tip-content {
+            .option-tip-content {
                 display: none;
                 position: absolute;
                 left: -4px;
@@ -105,6 +105,7 @@ textarea {
                 background: #16a085;
                 white-space: normal;
                 color: #fff;
+                word-break: break-all;
 
                 &:before {
                     content: '';
@@ -173,7 +174,7 @@ textarea {
     }
 
     .btn {
-        margin-top: 15px;
+        margin-top: 10px;
         margin-bottom: 15px;
         padding: 8px;
         font-size: 15px;
@@ -184,23 +185,24 @@ textarea {
         visibility: visible;
     }
 
-    .bootstrap-switch-on + .proxy-tip{
+    .bootstrap-switch-on + .option-tip{
         opacity: 1;
         visibility: visible;
     }
 
-    .local-rules {
+    .proxy-rules {
         margin-bottom: 15px;
     }
 
     .intranet-tip {
         margin-left: 3px;
-        opacity: 0;
         color: #999;
+        visibility: hidden;
     }
 
     .proxy-target:checked ~ .intranet-tip {
         opacity: 1;
+        visibility: visible;
     }
 
     .rule-item {

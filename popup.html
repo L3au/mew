@@ -16,12 +16,6 @@
         <div class="option">
             <label class="option-label">代理启用</label>
             <input type="checkbox" class="proxy-enabled" name="enabled" data-toggle="switch" {{= it.enabled ? 'checked' : ''}} value="true">
-            <small class="proxy-tip">
-                <span class="fui-alert-circle"></span>
-                    <span class="proxy-tip-content">
-                        项目名称可不填，则仓库组所有项目代理到对应目录。自动刷新页面地址匹配会忽略location.search以后的内容。
-                    </span>
-            </small>
         </div>
 
         <div class="option">
@@ -30,17 +24,27 @@
                 <input type="radio" class="proxy-target" name="target" value="local" data-toggle="radio" {{= it.target == 'local' ? 'checked' : ''}} {{= it.enabled ? '' : 'disabled'}}>本地
             </label>
             <label class="radio {{= it.enabled ? '' : 'disabled'}}">
-                <input type="radio" class="proxy-target" name="target" value="gitlab" data-toggle="radio" {{= it.target == 'gitlab' ? 'checked' : ''}} {{= it.enabled ? '' : 'disabled'}}>Gitlab<small class="intranet-tip">(仅限内网)</small>
+                <input type="radio" class="proxy-target" name="target" value="remote" data-toggle="radio" {{= it.target == 'remote' ? 'checked' : ''}} {{= it.enabled ? '' : 'disabled'}}>Gitlab<small class="intranet-tip">(仅限内网)</small>
             </label>
 
-            <div class="local-rules {{= it.target == 'local' ? '' : 'hidden'}} {{= it.enabled ? '' : 'disabled'}}">
-                {{ var rules = it.rules; }}
-                {{ rules.forEach(function(rule, index) { }}
+            <div class="proxy-rules proxy-local-rules {{= it.target == 'local' ? '' : 'hidden'}} {{= it.enabled ? '' : 'disabled'}}">
+                {{ it.localRules.forEach(function(rule, index) { }}
                 <div class="rule-item">
-                    <input type="text" name="rules[][group]" value="{{= rule.group || '' }}" placeholder="仓库组" class="form-control group">
-                    <input type="text" name="rules[][project]" value="{{= rule.project || '' }}" placeholder="项目名称" class="form-control project">
-                    <input type="text" name="rules[][path]" value="{{= rule.path || '' }}" placeholder="对应目录" class="form-control path">
-                    <span class="{{= (index == rules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="rules" data-index="{{= index }}"></span>
+                    <input type="text" name="localRules[][group]" value="{{= rule.group || '' }}" placeholder="仓库组" class="form-control group">
+                    <input type="text" name="localRules[][project]" value="{{= rule.project || '' }}" placeholder="项目名称" class="form-control project">
+                    <input type="text" name="localRules[][path]" value="{{= rule.path || '' }}" placeholder="对应本地路径" class="form-control path">
+                    <span class="{{= (index == it.localRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="local" data-index="{{= index }}"></span>
+                </div>
+                {{ }); }}
+            </div>
+
+            <div class="proxy-rules proxy-remote-rules {{= it.target == 'remote' ? '' : 'hidden'}} {{= it.enabled ? '' : 'disabled'}}">
+                {{ it.remoteRules.forEach(function(rule, index) { }}
+                <div class="rule-item">
+                    <input type="text" name="remoteRules[][group]" value="{{= rule.group || '' }}" placeholder="仓库组" class="form-control group">
+                    <input type="text" name="remoteRules[][project]" value="{{= rule.project || '' }}" placeholder="项目名称" class="form-control project">
+                    <input type="text" name="remoteRules[][directory]" value="{{= rule.directory || '' }}" placeholder="源码目录(如:src)" class="form-control path">
+                    <span class="{{= (index == it.remoteRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="remote" data-index="{{= index }}"></span>
                 </div>
                 {{ }); }}
             </div>
@@ -50,20 +54,25 @@
 
         <div class="option">
             <label class="option-label">禁用缓存</label>
-            <input type="checkbox" name="cached" data-toggle="switch" {{= it.cached ? 'checked' : ''}} value="true">
-            <small>（全局禁用）</small>
+            <input type="checkbox" name="disabledCache" data-toggle="switch" {{= it.disabledCache ? 'checked' : ''}} value="true">
+            <small>（建议只在开发时启用）</small>
         </div>
 
         <div class="option">
             <label class="option-label">自动刷新</label>
             <input type="checkbox" class="refresh-check" name="autoRefresh" data-toggle="switch" {{= it.autoRefresh ? 'checked' : ''}} value="true">
+            <small class="option-tip">
+                <span class="fui-alert-circle"></span>
+                <span class="option-tip-content">
+                    页面地址匹配会忽略location.search以后的内容。
+                </span>
+            </small>
 
-            {{ var list = it.refreshList; }}
             <div class="refresh-list {{= it.autoRefresh ? '' : 'hidden'}}">
-                {{ list.forEach(function(href, index) { }}
+                {{ it.refreshList.forEach(function(href, index) { }}
                 <div class="refresh-item">
                     <input type="text" name="refreshList[]" value="{{= href }}" placeholder="请填写需要自动刷新的页面地址" class="form-control refresh">
-                    <span class="{{= (index == list.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="refresh" data-index="{{= index }}"></span>
+                    <span class="{{= (index == it.refreshList.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="refresh" data-index="{{= index }}"></span>
                 </div>
                 {{ }); }}
             </div>

@@ -18,7 +18,7 @@ html {
 .container {
   position: relative;
   width: 320px;
-  min-height: 318px;
+  min-height: 323px;
   box-sizing: border-box;
 }
 h1 {
@@ -45,17 +45,17 @@ textarea {
   white-space: nowrap;
   transition: 0.3s ease-out;
 }
-.options-form .option .proxy-tip {
+.options-form .option .option-tip {
   transition: none;
 }
-.options-form .option .proxy-tip > .fui-alert-circle {
+.options-form .option .option-tip > .fui-alert-circle {
   width: 12px;
   height: 12px;
   margin-left: 5px;
   line-height: 1;
   font-size: 12px;
 }
-.options-form .option .proxy-tip > .fui-alert-circle:hover + .proxy-tip-content {
+.options-form .option .option-tip > .fui-alert-circle:hover + .option-tip-content {
   display: block;
   -webkit-transform-origin: 10px 0;
   -webkit-animation: previewer .2s;
@@ -64,7 +64,7 @@ textarea {
   animation: previewer .2s;
   animation-timing-function: cubic-bezier(0.5, 0, 0.7, 1.8);
 }
-.options-form .option .proxy-tip .proxy-tip-content {
+.options-form .option .option-tip .option-tip-content {
   display: none;
   position: absolute;
   left: -4px;
@@ -79,8 +79,9 @@ textarea {
   background: #16a085;
   white-space: normal;
   color: #fff;
+  word-break: break-all;
 }
-.options-form .option .proxy-tip .proxy-tip-content:before {
+.options-form .option .option-tip .option-tip-content:before {
   content: '';
   position: absolute;
   left: 10px;
@@ -134,7 +135,7 @@ textarea {
   pointer-events: none;
 }
 .options-form .btn {
-  margin-top: 15px;
+  margin-top: 10px;
   margin-bottom: 15px;
   padding: 8px;
   font-size: 15px;
@@ -143,20 +144,21 @@ textarea {
   opacity: 1;
   visibility: visible;
 }
-.options-form .bootstrap-switch-on + .proxy-tip {
+.options-form .bootstrap-switch-on + .option-tip {
   opacity: 1;
   visibility: visible;
 }
-.options-form .local-rules {
+.options-form .proxy-rules {
   margin-bottom: 15px;
 }
 .options-form .intranet-tip {
   margin-left: 3px;
-  opacity: 0;
   color: #999;
+  visibility: hidden;
 }
 .options-form .proxy-target:checked ~ .intranet-tip {
   opacity: 1;
+  visibility: visible;
 }
 .options-form .rule-item {
   display: flex;

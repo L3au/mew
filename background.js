@@ -1,116 +1,232 @@
-chrome.webRequest.onBeforeRequest.addListener(function (request) {
-    var content = '';
-    var mineTypes = {
-        'script': 'application/javascript',
-        'stylesheet': 'text/css'
-    };
-    var urls = app.processRequestUrl(request.url);
+function isEmpty(o) {
+    return Object.keys(o).length == 0;
+}
 
-    if (urls) {
-        content = app.getUrlsContent(urls);
+function getOptions() {
+    return JSON.parse(localStorage.options || '{}');
+}
 
-        urls = urls.map(function (url) {
-            return url.split('/').slice(-2).join('/');
-        });
+function setOptions(options) {
+    chrome.storage.sync.set(options);
+    localStorage.options = JSON.stringify(options);
 
-        if (content) {
-            var mineType = mineTypes[request.type];
-
-            var uri = 'data:' + mineType;
-
-            uri += ';charset=utf-8;file=[' + urls.join('|') + ']';
-            uri += ',' + encodeURIComponent(content);
-
-            return {
-                redirectUrl: uri
-            };
-        }
-    }
-}, {
-    urls: ['*://g.tbcdn.cn/*', '*://g.assets.daily.taobao.net/*'],
-    types: ['script', 'stylesheet']
-}, ['blocking']);
-
-var Util = {
-    isEmpty: function (o) {
-        return Object.keys(o).length == 0;
-    },
-
-    template: function (str) {
-        var strFunc = "var out = ''; out+=" + "'" +
-            str.replace(/[\r\t\n]/g, " ")
-                .replace(/'(?=[^}]*}})/g, "\t")
-                .split("'").join("\\'")
-                .split("\t").join("'")
-                .replace(/{{=(.+?)}}/g, "'; out += $1; out += '")
-                .split("{{").join("';")
-                .split("}}").join("out+='") + "'; return out;";
-
-        var fn = new Function("it", strFunc);
-
-        return {
-            render: function (data) {
-                return fn(data || {});
+    if (options.enabled || options.disabledCache || options.autoRefresh) {
+        chrome.browserAction.setIcon({
+            path: {
+                "19": "icon/icon_48.png",
+                "38": "icon/icon_128.png"
             }
-        }
-    },
-
-    isInAliIntranet: function (fn) {
-        var url = 'http://www.taobao.com/go/rgn/cainiao/tools/is_intranet.php';
-        var xhr = new XMLHttpRequest();
-
-        xhr.open('GET', url, true);
-        xhr.onload = function () {
-            fn.call(this, xhr.responseText);
-        };
-        xhr.send();
-    },
-
-    isInAliIntranetSync: function () {
-        var url = 'http://www.taobao.com/go/rgn/cainiao/tools/is_intranet.php';
-        var xhr = new XMLHttpRequest();
-
-        xhr.open('GET', url, false);
-        xhr.send();
-
-        return xhr.responseText === '1';
-    },
-
-    setOptions: function (options) {
-        chrome.storage.sync.set(options);
-        localStorage.options = JSON.stringify(options);
-        chrome.tabs.reload({
-            bypassCache: true
         });
-    },
-
-    isValidPath: function (path) {
-        return filemanager.exists(path);
+    } else {
+        chrome.browserAction.setIcon({
+            path: {
+                "19": "icon/icon_disabled.png",
+                "38": "icon/icon_disabled.png"
+            }
+        });
     }
-};
+
+    chrome.tabs.reload({
+        bypassCache: true
+    });
+}
+
+function isValidPath(path) {
+    if (!filemanager.exists) {
+        filemanager.outerHTML = filemanager.outerHTML + '';
+    }
+    return filemanager.exists(path);
+}
+
+function isInAliIntranetSync() {
+    var url = 'http://www.taobao.com/go/rgn/cainiao/tools/is_intranet.php';
+    var xhr = new XMLHttpRequest();
+
+    xhr.open('GET', url, false);
+    xhr.send();
+
+    return xhr.responseText === '1';
+}
 
 var app = (function () {
-    var Background = function () {
+    function Background() {
         this.initialize();
-    };
+    }
 
     Background.prototype = {
         constructor: Background,
 
+        cacheWorkers: {},
+
         initialize: function () {
-            this.initExtensionOptions();
+            this.bindEvents();
+            this.initOptions();
+            this.initAutoRefresh();
         },
 
-        initExtensionOptions: function () {
-            chrome.storage.local.get(function (options) {
-                if (Util.isEmpty(options)) {
+        bindEvents: function () {
+            var self = this;
+
+            var isClearing;
+            // clear browsing cache
+            chrome.webRequest.onBeforeRequest.addListener(function () {
+                var options = getOptions();
+
+                if (options.disabledCache && !isClearing) {
+                    var oneWeekTime = 1000 * 60 * 60 * 24 * 7;
+                    var since = Date.now() - oneWeekTime;
+
+                    isClearing = true;
+
+                    chrome.browsingData.removeCache({
+                        since: since
+                    }, function () {
+                        isClearing = false;
+                    });
+                }
+            }, {
+                urls: ['<all_urls>'],
+                types: ['main_frame']
+            });
+
+            // proxy taobao assets
+            chrome.webRequest.onBeforeRequest.addListener(function (request) {
+                var url = request.url;
+                var type = request.type;
+                var mineTypes = {
+                    'script': 'text/javascript',
+                    'stylesheet': 'text/css'
+                };
+                var match, mineType;
+
+                if (type == 'main_frame') {
+                    match = /\.(js|css)(?:\?|$)/i.exec(url);
+
+                    if (!match) {
+                        return;
+                    }
+
+                    type = match[1] == 'js' ? 'script' : 'stylesheet';
+                }
+
+                mineType = mineTypes[type];
+
+                var urls = self.processRequestUrl(url);
+
+                if (!urls) {
+                    return;
+                }
+
+                var content = self.getProxyContent(urls);
+
+                if (!content) {
+                    return;
+                }
+
+                var uri = 'data:' + mineType;
+                var filename = self.getFileName(urls);
+
+                uri += ';file=[' + filename + '];charset=utf-8,';
+                uri += encodeURIComponent(content);
+
+                return {
+                    redirectUrl: uri
+                };
+            }, {
+                urls: ['*://g.tbcdn.cn/*', '*://g.assets.daily.taobao.net/*'],
+                types: ['main_frame', 'script', 'stylesheet']
+            }, ['blocking']);
+
+            // watch auto refresh
+            chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+
+                self.clearWorker(tabId);
+
+                if (changeInfo.status == 'complete') {
+                    var options = getOptions();
+                    var list = options.refreshList;
+
+                    if (options.autoRefresh && list != '') {
+                        var url = new URL(tab.url);
+
+                        var isMatched = list.some(function (rUrl) {
+                            rUrl = new URL(rUrl);
+
+                            if (rUrl.origin == url.origin && rUrl.pathname == url.pathname) {
+                                return true;
+                            }
+                        });
+
+                        if (isMatched) {
+                            chrome.tabs.executeScript(tabId, {
+                                file: 'content.js'
+                            });
+                        }
+                    } else {
+                        self.clearAllWorker();
+                    }
+                }
+            });
+
+            chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
+                self.clearWorker(tabId);
+            });
+
+            chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+                var action = request.action;
+                var tabId = sender.tab.id;
+                var workers = self.cacheWorkers;
+                var assets;
+
+                if (action == 'collectAssets') {
+                    assets = request.assets;
+
+                    assets = assets.map(function (url) {
+                        return self.processRequestUrl(url) || url;
+                    });
+
+                    assets = assets.reduce(function (a, b) {
+                        return a.push ? a.concat(b) : [a].concat(b);
+                    });
+
+                    assets = assets.map(function (url) {
+                        return /^https?/.test(url) ? url : 'file://' + url;
+                    });
+
+                    var worker = new Worker('worker.js');
+
+                    workers[tabId] = worker;
+
+                    worker.onmessage = function (event) {
+                        var url = event.data;
+                        var isCSS = /\.css(?:\?|$)/i.exec(url);
+
+                        if (!isCSS) {
+                            self.clearWorker(tabId);
+                        }
+
+                        chrome.tabs.sendMessage(tabId, {
+                            action: 'refresh',
+                            url: url
+                        });
+                    };
+
+                    worker.postMessage(assets);
+                }
+            });
+        },
+
+        initOptions: function () {
+            chrome.storage.sync.get(function (options) {
+                if (isEmpty(options)) {
                     options = {
                         enabled: false,
                         target: 'local',
-                        rules: [{}],
-                        directory: 'src',
+                        localRules: [{}],
+                        remoteRules: [{}],
                         autoRefresh: false,
-                        refreshList: ['']
+                        refreshList: [''],
+                        disabledCache: false
                     };
 
                     chrome.storage.sync.set(options);
@@ -128,35 +244,69 @@ var app = (function () {
             });
         },
 
+        initAutoRefresh: function () {
+            var options = getOptions();
+            var list = options.refreshList;
+
+            if (options.autoRefresh && list != '') {
+
+            }
+        },
+
+        clearWorker: function (tabId) {
+            var workers = this.cacheWorkers;
+            var worker = workers[tabId];
+
+            if (worker) {
+                worker.terminate();
+                worker = null;
+                delete workers[tabId];
+            }
+        },
+
+        clearAllWorker: function () {
+            var workers = this.cacheWorkers;
+
+            for (var tabId in workers) {
+                this.clearWorker(tabId);
+            }
+        },
+
+        getFileName: function (urls) {
+            return urls.map(function (url) {
+                return url.split('/').slice(-2).join('/');
+            }).join('|');
+        },
+
         processRequestUrl: function (requestUrl) {
             var url = new URL(requestUrl);
             var host = url.host;
+            var origin = url.origin;
             var search = url.search;
             var pathname = url.pathname;
 
-            var isAssets = /\.(js|css)(?:\?|$)/i.test(requestUrl);
             var proxyHosts = ['g.tbcdn.cn', 'g.assets.daily.taobao.net'];
 
-            if (!isAssets || proxyHosts.indexOf(url.host) < 0) {
+            if (proxyHosts.indexOf(host) < 0) {
                 return;
             }
 
-            var proxy = JSON.parse(localStorage.proxy);
-            var target = proxy.target;
-            var rules = proxy.rules;
-            var directory = proxy.directory;
+            var options = getOptions();
+            var target = options.target;
+            var localRules = options.localRules;
+            var remoteRules = options.remoteRules;
 
-            if (!proxy.enabled) {
+            if (!options.enabled) {
                 return;
             }
 
-            var files;
+            var files = [];
             var paths = [pathname];
             var isCombo = search.slice(0, 2) == '??';
 
             if (isCombo) {
-                paths = search.slice(2).split(',').map(function (file) {
-                    return pathname + file;
+                paths = search.slice(2).split(',').map(function (filename) {
+                    return pathname + filename;
                 });
             }
 
@@ -181,92 +331,110 @@ var app = (function () {
                 });
 
                 paths.forEach(function (path) {
-                    var isTarget = rules.some(function (rule) {
-                        if (path.group !== rule.group) {
+                    localRules.some(function (rule) {
+                        if (path.group !== rule.group || path.project !== rule.project) {
                             return false;
                         }
 
-                        // all group
-                        if (!rule.project || (rule.project && path.project == rule.project)) {
-                            var pathArray = [rule.path, directory, path.path];
+                        var fullPath = rule.path.replace(/\/$/, '') + '/' + path.path;
 
-                            if (!rule.project) {
-                                pathArray.splice(1, 0, path.project);
-                            }
+                        if (isValidPath(fullPath)) {
+                            files[path.origPath] = fullPath;
 
-                            var fullPath = pathArray.join('/');
-
-                            if (Util.isValidPath(fullPath)) {
-                                files[path.origPath] = fullPath;
-
-                                return true;
-                            }
+                            return true;
                         }
                     });
                 });
 
                 if (Object.keys(files).length > 0) {
-                    files = paths.map(function (path) {
-                        var localPath = files[path.origPath];
-
-                        if (localPath) {
-                            return localPath;
+                    return paths.map(function (path) {
+                        if (files.hasOwnProperty(path.origPath)) {
+                            return files[path.origPath];
                         } else {
-                            return url.origin + path.origPath;
+                            return origin + path.origPath;
                         }
                     });
                 }
             }
 
-            if (target == 'gitlab') {
-                var origin = 'http://gitlab.alibaba-inc.com';
+            if (target == 'remote') {
+                var gitOrigin = 'http://gitlab.alibaba-inc.com';
 
-                files = [];
                 paths = paths.map(function (path) {
-                    return origin + path.replace(/(\/\d+\.\d+\.\d+\/)/, '/raw/daily$1' + directory + '/');
+                    var temp = path.slice(1);
+                    var parts = temp.split('/');
+
+                    var pathObj = {
+                        group: parts[0],
+                        project: parts[1],
+                        path: parts.slice(2).join('/'),
+                        origPath: path
+                    };
+
+                    var filePath;
+                    var isMatched = remoteRules.some(function (rule) {
+                        if (pathObj.group == rule.group && pathObj.project == rule.project) {
+                            filePath = path.replace(/(\/\d+\.\d+\.\d+\/)/, '/raw/daily$1' + rule.directory + '/');
+                            return true;
+                        }
+                    });
+
+                    if (isMatched) {
+                        return gitOrigin + filePath;
+                    } else {
+                        return origin + path;
+                    }
                 });
 
+                var isValid = true;
+
                 paths.forEach(function (url) {
-                    var xhr = new XMLHttpRequest();
+                    if (url.indexOf(gitOrigin) == 0) {
+                        var xhr = new XMLHttpRequest();
 
-                    xhr.open('HEAD', url, false);
-                    xhr.send();
-
-                    if (xhr.status > 400) {
-                        url = url.replace('/raw/daily', '/raw/publish');
                         xhr.open('HEAD', url, false);
                         xhr.send();
 
                         if (xhr.status > 400) {
-                            return;
+                            url = url.replace('/raw/daily', '/raw/publish');
+                            xhr.open('HEAD', url, false);
+                            xhr.send();
+
+                            if (xhr.status > 400) {
+                                isValid = false;
+                            }
                         }
                     }
 
                     files.push(url);
                 });
-            }
 
-            if (files.length > 0) {
-                return files;
+                if (!isValid) {
+                    return;
+                }
+
+                if (files.length > 0) {
+                    return files;
+                }
             }
         },
 
-        getUrlsContent: function (urls) {
+        getProxyContent: function (urls) {
             var isAllPass = true;
 
             var content = urls.reduce(function (preContent, url) {
                 var curContent = '';
 
                 try {
-                    if (url.match(/^\//)) {
-                        curContent += filemanager.read(url) + '\n';
-                    } else {
+                    if (/^https?/.test(url)) {
                         var xhr = new XMLHttpRequest();
 
                         xhr.open('GET', url, false);
                         xhr.send();
 
                         curContent += xhr.responseText + '\n';
+                    } else {
+                        curContent += filemanager.read(url) + '\n';
                     }
                 } catch (e) {
                     isAllPass = false;

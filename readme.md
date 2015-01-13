@@ -4,7 +4,7 @@ Mew Proxy
 
 安装
 ---
-[下载]()后拖拽到Chrome扩展页面(chrome://extensions/)安装
+[下载](https://github.com/L3au/mew-proxy/tree/master/crx)后拖拽到Chrome扩展页面(chrome://extensions/)安装
 
 配置
 ---
