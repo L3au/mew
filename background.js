@@ -17,6 +17,23 @@ function setOptions(options) {
                 "38": "icon/icon_128.png"
             }
         });
+
+        var badgeText = '';
+
+        if (options.enabled) {
+            badgeText += 'P';
+        }
+
+        if (options.disabledCache) {
+            badgeText += 'C';
+        }
+
+        if (options.autoRefresh) {
+            badgeText += 'R';
+        }
+
+        chrome.browserAction.setBadgeText({text: badgeText});
+        chrome.browserAction.setBadgeBackgroundColor({color: '#fd5e2d'})
     } else {
         chrome.browserAction.setIcon({
             path: {
@@ -24,6 +41,9 @@ function setOptions(options) {
                 "38": "icon/icon_disabled.png"
             }
         });
+
+        chrome.browserAction.setBadgeText({text: ''});
+        chrome.browserAction.setBadgeBackgroundColor({color: [0, 0, 0, 0]})
     }
 
     chrome.tabs.reload({
@@ -68,8 +88,8 @@ var app = (function () {
             var self = this;
 
             var isClearing;
-            // clear browsing cache
-            chrome.webRequest.onBeforeRequest.addListener(function () {
+
+            function clearCache() {
                 var options = getOptions();
 
                 if (options.disabledCache && !isClearing) {
@@ -84,6 +104,11 @@ var app = (function () {
                         isClearing = false;
                     });
                 }
+            }
+
+            // clear browsing cache
+            chrome.webRequest.onBeforeRequest.addListener(function () {
+                clearCache();
             }, {
                 urls: ['<all_urls>'],
                 types: ['main_frame']
@@ -165,6 +190,8 @@ var app = (function () {
                     } else {
                         self.clearAllWorker();
                     }
+
+                    clearCache();
                 }
             });
 
