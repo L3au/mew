@@ -1,0 +1,257 @@
+.hidden() {
+    position: absolute;
+    visibility: hidden;
+    left: -999em;
+    top: -999em;
+    opacity: 0;
+}
+
+.shown() {
+    position: static;
+    visibility: visible;
+    opacity: 1;
+}
+
+@-webkit-keyframes previewer {
+    from {
+        -webkit-transform: scale(.5);
+        transform: scale(.5);
+    }
+    to {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+html {
+    opacity: 0;
+    transition: transform .3s ease-out, opacity .1s linear;
+}
+
+.popup-show {
+    opacity: 1;
+}
+
+.container {
+    position: relative;
+    width: 320px;
+    min-height: 318px;
+    box-sizing: border-box;
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font: 300 18px "Helvetica Neue", Helvetica;
+    -webkit-font-smoothing: antialiased;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2) {
+    h1 {
+        font-weight: lighter;
+    }
+}
+
+textarea {
+    height: 60px !important;
+    margin-bottom: 15px;
+}
+
+.options-form {
+    .option {
+        > small {
+            position: absolute;
+            margin-top: .5em;
+            font-size: 10px;
+            opacity: 0;
+            visibility: hidden;
+            white-space: nowrap;
+            transition: 0.3s ease-out;
+        }
+
+        .proxy-tip {
+            transition: none;
+
+            > .fui-alert-circle {
+                width: 12px;
+                height: 12px;
+                margin-left: 5px;
+                line-height: 1;
+                font-size: 12px;
+
+                &:hover + .proxy-tip-content {
+                    display: block;
+                    -webkit-transform-origin: 10px 0;
+                    -webkit-animation: previewer .2s;
+                    -webkit-animation-timing-function: cubic-bezier(0.5, 0, 0.7, 1.8);
+                    transform-origin: 10px 0;
+                    animation: previewer .2s;
+                    animation-timing-function: cubic-bezier(0.5, 0, 0.7, 1.8);
+                }
+            }
+
+            .proxy-tip-content {
+                display: none;
+                position: absolute;
+                left: -4px;
+                top: 22px;
+                z-index: 1;
+                width: 153px;
+                padding: .5em;
+                padding-right: 0px;
+                font-size: 12px;
+                line-height: 1.4;
+                border-radius: 3px;
+                background: #16a085;
+                white-space: normal;
+                color: #fff;
+
+                &:before {
+                    content: '';
+                    position: absolute;
+                    left: 10px;
+                    top: -5px;
+                    width: 0;
+                    height: 0;
+                    border-left: 5px solid transparent;
+                    border-right: 5px solid transparent;
+                    border-bottom: 5px solid #16a085;
+                }
+            }
+        }
+
+        .form-control {
+            display: inline-block;
+            height: 34px;
+            padding: 4px .5em;
+            font-size: 13px;
+        }
+
+        .form-control-error {
+            border-color: #e74c3c;
+            box-shadow: none;
+        }
+
+        [class^=fui] {
+            display: inline-block;
+            width: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            vertical-align: middle;
+            opacity: 0.6;
+            transition: .25s;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+
+    .option-label {
+        width: 70px;
+    }
+
+    .radio-wrap {
+        display: inline-block;
+    }
+
+    .radio {
+        display: inline-block;
+        margin-top: 0;
+        margin-bottom: 10px;
+        padding-left: 25px;
+        cursor: pointer;
+    }
+
+    .radio .icons:before {
+        content: none !important;
+    }
+
+    .disabled {
+        pointer-events: none;
+    }
+
+    .btn {
+        margin-top: 15px;
+        margin-bottom: 15px;
+        padding: 8px;
+        font-size: 15px;
+    }
+
+    .bootstrap-switch-on:hover + small {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .bootstrap-switch-on + .proxy-tip{
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .local-rules {
+        margin-bottom: 15px;
+    }
+
+    .intranet-tip {
+        margin-left: 3px;
+        opacity: 0;
+        color: #999;
+    }
+
+    .proxy-target:checked ~ .intranet-tip {
+        opacity: 1;
+    }
+
+    .rule-item {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        justify-content: space-between;
+
+        & + .rule-item {
+            margin-top: 5px;
+        }
+
+        > .group {
+            width: 60px;
+        }
+
+        > .project {
+            width: 75px;
+        }
+
+        > .path {
+            width: 115px;
+        }
+    }
+
+    .split-line {
+        position: relative;
+        height: 15px;
+
+        &:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 3px;
+            background: -webkit-linear-gradient(rgba(0,0,0,0.2),rgba(0,0,0,0));
+            -webkit-mask-box-image: -webkit-linear-gradient(left,rgba(0,0,0,.1),rgba(0,0,0,.8),rgba(0,0,0,.1));
+        }
+    }
+
+    .refresh-item {
+        display: flex;
+        align-items: center;
+
+        & + .refresh-item {
+            margin-top: 5px;
+        }
+
+        [class^=fui] {
+            margin-left: 8px;
+        }
+    }
+}
