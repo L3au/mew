@@ -68,7 +68,10 @@
                 });
 
                 rootEl.classList.add('mew-proxy-refresh');
-                rootEl.classList.remove('mew-proxy-refresh');
+
+                setTimeout(function () {
+                    rootEl.classList.remove('mew-proxy-refresh');
+                });
             } else {
                 location.reload()
             }

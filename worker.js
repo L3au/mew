@@ -53,7 +53,7 @@ var onmessage = function (event) {
                 xhr.send();
             });
         })).then(function () {
-            timer = setTimeout(init, 1200);
+            timer = setTimeout(init, 750);
         });
     }
 
