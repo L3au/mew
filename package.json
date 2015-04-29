@@ -1,0 +1,36 @@
+{
+    "name": "mew",
+    "version": "1.0.0",
+    "description": "A proxy for static resources",
+    "author": {
+        "name": "L3au",
+        "email": "leshu.lau@gmail.com"
+    },
+    "keywords": [
+        "proxy",
+        "frontend",
+        "combo",
+        "web"
+    ],
+    "bin": {
+        "aproxy": "bin/mew"
+    },
+    "scripts": {
+        "preinstall": "",
+        "install": "mew start"
+    },
+    "dependencies": {
+        "co": "~4.5.2",
+        "iconv-lite": "~0.4.8",
+        "koa": "~0.19.1"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/L3au/mew"
+    },
+    "bugs": {
+        "url": "https://github.com/L3au/mew/issues"
+    },
+    "homepage": "https://github.com/L3au/mew"
+}

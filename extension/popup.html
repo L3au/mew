@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" style="min-height: 578px;">
+<head>
+    <meta charset="utf-8">
+    <title>Aproxy Config</title>
+    <meta name="author" content="L3au">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/flat-ui-min.css">
+    <link rel="stylesheet" href="css/popup.css">
+</head>
+<body class="container">
+<h1>Aproxy</h1>
+<div class="proxy-ip">
+    <small id="address" class="address" data-copy="10.1.199.20:9999">10.1.199.20:9999</small>
+</div>
+<a class="fui-question-circle help" target="_blank" href="#"></a>
+<form class="options-form">
+    <script id="template" type="template">
+        <div class="option">
+            <label class="option-label">扩展启用</label>
+            <input type="checkbox" class="aproxy-enabled" name="enabled" data-toggle="switch" {{= it.enabled ? 'checked' : ''}} value="true">
+        </div>
+
+        <div class="option">
+            <h2>标准规则</h2>
+            <input type="text" class="focus">
+            <div class="option-rules proxy-rules">
+                {{ it.proxyRules.forEach(function(rule, index) { }}
+                <div class="rule-item {{= rule.disabled ? 'rule-item-disabled' : '' }}">
+                    <input type="text" name="proxyRules[][group]" value="{{= rule.group || '' }}" placeholder="仓库组" class="form-control group">
+                    <input type="text" name="proxyRules[][project]" value="{{= rule.project || '' }}" placeholder="项目名称" class="form-control project">
+                    <input type="text" name="proxyRules[][path]" value="{{= rule.path || '' }}" placeholder="本地src路径" class="form-control path">
+                    <input class="hidden disabled" type="text" name="proxyRules[][disabled]" value="{{= rule.disabled ? 'true' : 'false'}}">
+                    <span class="fui-eye" data-index="{{= index }}" data-type="proxy"></span>
+                    <span class="{{= (index == it.proxyRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="proxy" data-index="{{= index }}"></span>
+                </div>
+                {{ }); }}
+            </div>
+        </div>
+
+        <div class="option">
+            <h2>自定义规则</h2>
+            <div class="option-rules custom-rules">
+                {{ it.customRules.forEach(function(rule, index) { }}
+                <div class="rule-item {{= rule.disabled ? 'rule-item-disabled' : '' }}">
+                    <input type="text" name="customRules[][regex]" value="{{= rule.regex || '' }}" placeholder="匹配正则(/\\/path\\//)" class="form-control regex">
+                    <input type="text" name="customRules[][path]" value="{{= rule.path || '' }}" placeholder="代理路径或文件" class="form-control path">
+                    <input class="hidden disabled" type="text" name="customRules[][disabled]" value="{{= rule.disabled ? 'true' : 'false'}}">
+                    <span class="fui-eye" data-index="{{= index }}" data-type="custom"></span>
+                    <span class="{{= (index == it.customRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="custom" data-index="{{= index }}"></span>
+                </div>
+                {{ }); }}
+            </div>
+        </div>
+
+        <div class="split-line"></div>
+
+        <div class="option">
+            <h2>域名绑定</h2>
+            <div class="option-rules domain-rules">
+                {{ it.domainRules.forEach(function(rule, index) { }}
+                <div class="rule-item {{= rule.disabled ? 'rule-item-disabled' : '' }}">
+                    <input type="text" name="domainRules[][domain]" value="{{= rule.domain || '' }}" placeholder="域名(a.b.com)" class="form-control domain">
+                    <input type="text" name="domainRules[][ip]" value="{{= rule.ip || '' }}" placeholder="IP(默认80端口)" class="form-control ip">
+                    <input class="hidden disabled" type="text" name="domainRules[][disabled]" value="{{= rule.disabled ? 'true' : 'false'}}">
+                    <input class="hidden socks" type="text" name="domainRules[][socks]" value="{{= rule.socks ? 'true' : 'false'}}">
+                    <span title="SOCKS" class="fui-socks {{= rule.socks ? '' : 'fui-socks-disabled'}}" data-index="{{= index }}" data-type="domain"></span>
+                    <span class="fui-eye" data-index="{{= index }}" data-type="domain"></span>
+                    <span class="{{= (index == it.domainRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="domain" data-index="{{= index }}"></span>
+                </div>
+                {{ }); }}
+            </div>
+        </div>
+
+        <div class="option">
+            <h2>HTTPS服务</h2>
+            <div class="option-rules https-rules">
+                {{ it.httpsRules.forEach(function(rule, index) { }}
+                <div class="rule-item {{= rule.disabled ? 'rule-item-disabled' : '' }}">
+                    <input type="text" name="httpsRules[][domain]" value="{{= rule.domain || '' }}" placeholder="域名(a.b.com)" class="form-control domain">
+                    <input class="hidden disabled" type="text" name="httpsRules[][disabled]" value="{{= rule.disabled ? 'true' : 'false'}}">
+                    <span title="Content Security Policy" class="fui-lock {{= rule.csp ? '' : 'fui-lock-disabled'}}" data-index="{{= index }}" data-type="https"></span>
+                    <span class="fui-eye" data-index="{{= index }}" data-type="https"></span>
+                    <span class="{{= (index == it.httpsRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="https" data-index="{{= index }}"></span>
+                </div>
+                {{ }); }}
+            </div>
+        </div>
+
+        <div class="option">
+            <h2>自动刷新</h2>
+            <div class="option-rules refresh-rules">
+                {{ it.refreshRules.forEach(function(href, index) { }}
+                <div class="rule-item">
+                    <input type="text" name="refreshRules[]" value="{{= href }}" placeholder="请填写需要自动刷新的页面地址" class="form-control href">
+                    <span class="fui-eye" data-index="{{= index }}" data-type="refresh"></span>
+                    <span class="{{= (index == it.refreshRules.length - 1) ? 'fui-plus' : 'fui-cross'}}" data-type="refresh" data-index="{{= index }}"></span>
+                </div>
+                {{ }); }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-sm btn-block btn-primary">保存</button>
+    </script>
+</form>
+<script src="./js/jquery.min.js"></script>
+<script src="./js/flat-ui.js"></script>
+<script src="./js/serialize.js"></script>
+<script src="./popup.js"></script>
+</body>
+</html>
