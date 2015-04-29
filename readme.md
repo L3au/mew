@@ -1,16 +1,22 @@
-Mew Proxy
+Mew 
 ===
-基于Chrome扩展的前端静态资源代理工具
+基于koa前端静态资源代理工具
 
 安装
 ---
-[下载](https://github.com/L3au/mew-proxy/tree/master/crx)后拖拽到Chrome扩展页面(chrome://extensions/)安装
+
+npm安装mew后台服务
+
+```
+npm i -g mew
+```
+然后安装Chrome扩展
+
+
 
 配置
 ---
 设置代理规则后即可使用
-
-<p><img src="http://gtms01.alicdn.com/tps/i1/TB1mdibHXXXXXbvXFXXGXLCGpXX-700-738.png" width="380"></p>
 
 特性
 ---
@@ -22,7 +28,3 @@ Mew Proxy
 
 TO DO
 ---
-- 代理到指定电脑(局域网内)
-- 精确的代理规则设置
-- 自动刷新使用请求头判断
-- 提供Firefox版本
