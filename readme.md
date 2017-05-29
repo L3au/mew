@@ -1,5 +1,7 @@
 Mew 
 ===
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/L3au/mew.svg)](https://greenkeeper.io/)
 基于koa前端静态资源代理工具
 
 安装
