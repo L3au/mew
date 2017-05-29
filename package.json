@@ -20,9 +20,9 @@
         "install": "mew start"
     },
     "dependencies": {
-        "co": "~4.5.2",
+        "co": "~4.6.0",
         "iconv-lite": "~0.4.8",
-        "koa": "~0.19.1"
+        "koa": "~2.2.0"
     },
     "license": "MIT",
     "repository": {
